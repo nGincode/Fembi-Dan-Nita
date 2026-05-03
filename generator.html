@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generator Link Undangan - Nita & Fembi</title>
+    <!-- Menggunakan Tailwind CSS untuk styling cepat dan rapi -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans"
+  >
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg">
+      <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold text-slate-800">Link Generator</h1>
+        <p class="text-yellow-600 font-medium mt-1">
+          The Wedding of Nita & Fembi
+        </p>
+      </div>
+
+      <!-- Input Nama Tamu -->
+      <div class="mb-5">
+        <label
+          for="guestName"
+          class="block text-slate-700 text-sm font-semibold mb-2"
+          >Nama Tamu Undangan</label
+        >
+        <input
+          type="text"
+          id="guestName"
+          placeholder="Contoh: Budi Santoso & Partner"
+          class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+        />
+      </div>
+
+      <!-- Hasil Link Undangan -->
+      <div class="mb-5">
+        <label class="block text-slate-700 text-sm font-semibold mb-2"
+          >Link Undangan</label
+        >
+        <div class="flex">
+          <input
+            type="text"
+            id="generatedUrl"
+            readonly
+            class="w-full px-4 py-3 border border-slate-300 border-r-0 rounded-l-lg bg-slate-50 text-slate-600 outline-none text-sm"
+          />
+          <button
+            onclick="copyLink()"
+            id="btnCopyLink"
+            class="bg-yellow-600 hover:bg-yellow-700 text-white font-medium px-5 py-3 rounded-r-lg transition duration-200"
+          >
+            Salin
+          </button>
+        </div>
+      </div>
+
+      <!-- Format Pesan WhatsApp -->
+      <div class="mb-2">
+        <label class="block text-slate-700 text-sm font-semibold mb-2"
+          >Pesan WhatsApp (Otomatis)</label
+        >
+        <textarea
+          id="waMessage"
+          rows="7"
+          readonly
+          class="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-600 outline-none text-sm resize-none"
+        ></textarea>
+
+        <button
+          onclick="copyMessage()"
+          id="btnCopyWA"
+          class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
+            ></path>
+            <rect x="2" y="9" width="4" height="12"></rect>
+            <circle cx="4" cy="4" r="2"></circle>
+          </svg>
+          Salin Pesan WhatsApp
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Sesuaikan dengan domain website undangan
+      const baseUrl = "https://nitaandfembi.my.id/";
+
+      const guestInput = document.getElementById("guestName");
+      const urlOutput = document.getElementById("generatedUrl");
+      const waOutput = document.getElementById("waMessage");
+
+      // Fungsi untuk mengupdate URL dan Pesan secara realtime saat mengetik
+      function updateOutputs() {
+        const name = guestInput.value.trim();
+        let finalUrl = baseUrl;
+
+        if (name) {
+          // encodeURIComponent memastikan spasi berubah menjadi %20 (format URL yang aman)
+          finalUrl = `${baseUrl}?to=${encodeURIComponent(name)}`;
+        }
+
+        urlOutput.value = finalUrl;
+
+        // Template Pesan WhatsApp
+        const messageTemplate = `Bismillahirahmanirrahim.
+Tanpa mengurangi rasa hormat, perkenankan kami mengundang Bapak/Ibu/Saudara/i:
+
+*${name || "[Nama Tamu]"}*
+
+Untuk hadir dan memberikan doa restu pada acara pernikahan kami. Detail acara, lokasi, dan RSVP dapat dilihat melalui tautan undangan berikut:
+
+${finalUrl}
+
+Merupakan suatu kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.
+
+Terima kasih,
+Nita & Fembi`;
+
+        waOutput.value = messageTemplate;
+      }
+
+      // Event listener saat user mengetik di kolom input
+      guestInput.addEventListener("input", updateOutputs);
+
+      // Jalankan fungsi sekali saat halaman pertama kali dimuat
+      updateOutputs();
+
+      // Fungsi untuk menyalin Link
+      function copyLink() {
+        urlOutput.select();
+        navigator.clipboard.writeText(urlOutput.value).then(() => {
+          const btn = document.getElementById("btnCopyLink");
+          const originalText = btn.innerText;
+          btn.innerText = "Tersalin!";
+          btn.classList.replace("bg-yellow-600", "bg-slate-800");
+
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.classList.replace("bg-slate-800", "bg-yellow-600");
+          }, 2000);
+        });
+      }
+
+      // Fungsi untuk menyalin Pesan WA
+      function copyMessage() {
+        waOutput.select();
+        navigator.clipboard.writeText(waOutput.value).then(() => {
+          const btn = document.getElementById("btnCopyWA");
+          const originalText = btn.innerHTML;
+          btn.innerHTML = "Pesan Tersalin!";
+          btn.classList.replace("bg-green-600", "bg-slate-800");
+
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.replace("bg-slate-800", "bg-green-600");
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>
