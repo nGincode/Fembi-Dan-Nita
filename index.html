@@ -6508,89 +6508,78 @@
     ></script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // Pastikan ID ini sama dengan yang ada di div Elementor Anda
-        const container = document.getElementById("rsvp-data-container");
-        const form = document.querySelector(".elementor-form");
+      async function muatDaftarUcapan() {
+        const box = document.getElementById("rsvp-data-container");
+        if (!box) return;
 
-        function loadComments() {
-          fetch("api.php")
-            .then((res) => res.json())
-            .then((data) => {
-              // Log untuk memantau data di console browser (F12)
-              console.log("Data diterima:", data);
+        try {
+          // Tambahkan timestamp agar browser tidak mengambil data cache lama
+          const response = await fetch("api.php?t=" + new Date().getTime());
+          const data = await response.json();
 
-              // Pastikan data adalah array. Jika api.php hanya kirim 1 objek, kita ubah jadi array
-              const commentsArray = Array.isArray(data) ? data : [data];
+          console.log("Data dari server:", data); // Cek di F12 Console
 
-              if (commentsArray.length === 0 || !commentsArray[0].nama) {
-                container.innerHTML =
-                  '<p style="text-align:center; color:#888; font-style:italic;">Belum ada ucapan.</p>';
-                return;
-              }
+          if (!Array.isArray(data) || data.length === 0) {
+            box.innerHTML =
+              '<p style="text-align:center; color:#999; padding:20px;">Belum ada doa restu.</p>';
+            return;
+          }
 
-              container.innerHTML = commentsArray
-                .map((item) => {
-                  // Cek jika data ada, jika tidak beri default "-"
-                  const nama = item.nama || "Anonim";
-                  const ucapan = item.ucapan || "";
-                  const konfirmasi = item.konfirmasi || "Hadir";
-                  const jumlah = item.jumlah || "1";
-                  const waktu = item.created_at || "";
+          let htmlLengkap = "";
+          data.forEach((item) => {
+            htmlLengkap += `
+                <div class="card-ucapan" style="background:#fff; margin-bottom:15px; padding:15px; border-radius:10px; border-left:5px solid #66513E; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong style="color:#66513E; font-family:serif;">${item.nama}</strong>
+                        <span style="font-size:10px; background:#eee; padding:2px 7px; border-radius:10px;">${item.konfirmasi || "Hadir"}</span>
+                    </div>
+                    <p style="font-size:14px; color:#444; margin:10px 0; line-height:1.4;">${item.ucapan}</p>
+                    <small style="font-size:9px; color:#bbb; display:block; text-align:right;">${item.created_at}</small>
+                </div>
+            `;
+          });
 
-                  return `
-                        <div class="ucapan-card" style="background:#fff; border-radius:10px; padding:15px; margin-bottom:15px; border-left:4px solid #66513E; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                <span style="font-weight:bold; color:#66513E; font-family:'Lora', serif;">${nama}</span>
-                                <span style="font-size:10px; background:#f0f0f0; padding:2px 8px; border-radius:10px; color:#666;">
-                                    ${konfirmasi} (${jumlah})
-                                </span>
-                            </div>
-                            <p style="margin:5px 0; font-size:14px; color:#444; font-style:italic; line-height:1.5;">"${ucapan}"</p>
-                            <div style="text-align:right; font-size:9px; color:#bbb; margin-top:5px;">${waktu}</div>
-                        </div>
-                    `;
-                })
-                .join("");
-            })
-            .catch((err) => {
-              console.error("Gagal memuat data:", err);
-              container.innerHTML =
-                '<p style="text-align:center; color:red;">Gagal memuat ucapan.</p>';
-            });
+          box.innerHTML = htmlLengkap;
+        } catch (error) {
+          console.error("Error load data:", error);
+          box.innerHTML =
+            '<p style="color:red; text-align:center;">Gagal memuat data ucapan.</p>';
         }
+      }
 
-        if (form) {
-          form.addEventListener("submit", function (e) {
+      // Jalankan saat halaman siap
+      document.addEventListener("DOMContentLoaded", function () {
+        muatDaftarUcapan();
+
+        // Integrasi Form Submit
+        const rsvpForm = document.querySelector(".elementor-form");
+        if (rsvpForm) {
+          rsvpForm.addEventListener("submit", async function (e) {
             e.preventDefault();
-            const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-
+            const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true;
-            btn.innerHTML = "Mengirim...";
+            btn.innerText = "Mengirim...";
 
-            fetch("api.php", {
-              method: "POST",
-              body: new FormData(form),
-            })
-              .then((res) => res.json())
-              .then((res) => {
-                if (res.status === "success") {
-                  form.reset();
-                  loadComments(); // Refresh list setelah isi form
-                }
-                alert(res.message);
-              })
-              .catch((err) => alert("Terjadi kesalahan saat mengirim."))
-              .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
+            try {
+              const res = await fetch("api.php", {
+                method: "POST",
+                body: new FormData(this),
               });
+              const result = await res.json();
+
+              if (result.status === "success") {
+                this.reset();
+                await muatDaftarUcapan(); // Refresh list
+                alert("Ucapan berhasil terkirim!");
+              }
+            } catch (err) {
+              alert("Gagal mengirim ucapan.");
+            } finally {
+              btn.disabled = false;
+              btn.innerText = "Berikan Ucapan";
+            }
           });
         }
-
-        // Jalankan pertama kali saat halaman dibuka
-        loadComments();
       });
     </script>
 
