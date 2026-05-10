@@ -6527,37 +6527,27 @@
 
           let htmlLengkap = "";
           data.forEach((item) => {
-            // Logika untuk warna badge status
             let statusClass = "status-hadir";
             let statusText = item.konfirmasi || "Hadir";
-
             if (statusText === "Masih Ragu") statusClass = "status-ragu";
             if (statusText === "Tidak Hadir") statusClass = "status-tidak";
 
-            // Logika format tanggal yang lebih rapi (opsional, jika format SQLite standard yyyy-mm-dd)
-            let tanggal = item.created_at;
-            try {
-              const dateObj = new Date(item.created_at);
-              tanggal = dateObj.toLocaleDateString("id-ID", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              });
-            } catch (e) {}
-
             htmlLengkap += `
-                <div class="card-ucapan">
+                <div class="card-ucapan animate__animated animate__fadeInUp">
                     <div class="ucapan-header">
                         <span class="ucapan-nama">${item.nama}</span>
                         <span class="ucapan-status-badge ${statusClass}">${statusText}</span>
                     </div>
-                    <p class="ucapan-teks">"${item.ucapan}"</p>
-                    <small class="ucapan-waktu">${tanggal}</small>
+                    <p class="ucapan-teks">${item.ucapan}</p>
+                    <small class="ucapan-waktu">
+                        <i class="far fa-clock"></i> ${item.created_at}
+                    </small>
                 </div>
             `;
           });
 
           box.innerHTML = htmlLengkap;
+          box.style.setProperty("display", "block", "important"); // Paksa muncul lewat JS
         } catch (error) {
           box.innerHTML =
             '<p style="color:#721c24; text-align:center; background:#f8d7da; padding:15px; border-radius:10px;">Gagal memuat data ucapan.</p>';
@@ -6600,119 +6590,104 @@
     </script>
 
     <style>
-      /* --- DESAIN CONTAINER UCAPAN YANG ESTETIK --- */
+      /* Paksa muncul dan hilangkan display none */
       #rsvp-data-container {
-        display: block; /* Pastikan tidak display: none */
-        margin-top: 50px;
-        padding: 20px 10px;
-        background-color: #fdfaf7; /* Warna background cream sangat muda agar kertas ucapan menonjol */
-        border-radius: 20px;
-        border: 1px solid #f2e9e0;
+        display: block !important;
+        margin-top: 30px;
+        padding: 10px;
+        max-height: 600px;
+        overflow-y: auto;
       }
 
-      /* Judul tambahan jika diperlukan di atas list */
-      #rsvp-data-container::before {
-        content: "Doa Restu Para Tamu";
-        display: block;
-        text-align: center;
-        font-family:
-          "Hurricane", cursive; /* Gunakan font skrip bawaan undangan */
-        font-size: 42px;
-        color: #66513e; /* Warna cokelat tema */
-        margin-bottom: 25px;
-      }
-
-      /* --- DESAIN KARTU UCAPAN (Luxury Card Style) --- */
+      /* Desain Kartu Ucapan Transparan (Glassmorphism) */
       .card-ucapan {
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.5); /* Transparan putih */
+        backdrop-filter: blur(10px); /* Efek blur kaca */
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 20px;
         margin-bottom: 20px;
-        padding: 25px;
-        border-radius: 15px;
-        /* Efek bayangan halus agar terlihat premium */
-        box-shadow: 0 10px 25px rgba(102, 81, 62, 0.08);
-        border: 1px solid #f2e9e0;
-        transition: transform 0.3s ease;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(102, 81, 62, 0.1);
         position: relative;
-        overflow: hidden;
       }
 
-      /* Efek hover sedikit terangkat */
-      .card-ucapan:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(102, 81, 62, 0.12);
-      }
-
-      /* Aksen garis cokelat tembaga di kiri */
-      .card-ucapan::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 5px;
-        background-color: #a38c71; /* Warna cokelat tembaga Arcana */
-      }
-
-      /* --- BAGIAN ATAS KARTU (Nama & Status) --- */
       .ucapan-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #f2e9e0;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
+        align-items: flex-start;
+        margin-bottom: 12px;
       }
 
+      /* Penambahan Ikon di Nama */
       .ucapan-nama {
-        color: #66513e; /* Cokelat gelap */
-        font-family: "Lora", serif; /* Font serif elegan */
+        font-family: "Lora", serif;
         font-weight: 700;
-        font-size: 17px;
-        letter-spacing: 0.5px;
+        color: #66513e;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Ikon User kecil */
+      .ucapan-nama::before {
+        content: "\f406"; /* Ikon user FontAwesome */
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        font-size: 14px;
+        opacity: 0.7;
       }
 
       .ucapan-status-badge {
+        font-size: 10px;
+        padding: 4px 10px;
+        border-radius: 30px;
         font-family: "Lora", serif;
-        font-size: 11px;
-        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        padding: 4px 12px;
-        border-radius: 20px;
+        letter-spacing: 0.5px;
+        font-weight: 600;
       }
 
-      /* Warna badge berdasarkan status */
       .status-hadir {
-        background-color: #e6f4ea; /* Hijau muda pucat */
-        color: #1e7e34;
+        background: #d4edda;
+        color: #155724;
       }
       .status-ragu {
-        background-color: #fff3cd; /* Kuning muda pucat */
+        background: #fff3cd;
         color: #856404;
       }
       .status-tidak {
-        background-color: #f8d7da; /* Merah muda pucat */
+        background: #f8d7da;
         color: #721c24;
       }
 
-      /* --- BAGIAN ISI UCAPAN --- */
       .ucapan-teks {
         font-family: "Lora", serif;
-        font-size: 15px;
-        color: #555555;
+        font-size: 14px;
+        color: #4a4a4a;
         line-height: 1.6;
-        font-style: italic; /* Membuat ucapan terasa lebih puitis */
         margin: 0;
+        padding-left: 5px;
+        border-left: 2px solid rgba(163, 140, 113, 0.3); /* Garis aksen tipis */
       }
 
-      /* --- BAGIAN WAKTU (Bawah) --- */
       .ucapan-waktu {
         display: block;
         text-align: right;
-        font-size: 10px;
-        color: #b0b0b0;
-        margin-top: 15px;
-        font-family: sans-serif;
+        font-size: 9px;
+        color: #888;
+        margin-top: 12px;
+        font-style: normal;
+      }
+
+      /* Scrollbar tipis biar ga ganggu desain */
+      #rsvp-data-container::-webkit-scrollbar {
+        width: 4px;
+      }
+      #rsvp-data-container::-webkit-scrollbar-thumb {
+        background: #a38c71;
+        border-radius: 10px;
       }
     </style>
   </body>
