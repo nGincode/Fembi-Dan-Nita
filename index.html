@@ -6508,168 +6508,158 @@
     ></script>
 
     <script>
-      async function muatDaftarUcapan() {
-        const box = document.getElementById("rsvp-data-container");
-        if (!box) return;
+      document.addEventListener("DOMContentLoaded", function () {
+        let allData = [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
 
-        // Pastikan container terlihat
-        box.style.display = "block";
+        const container = document.getElementById("rsvp-data-container");
 
-        try {
-          const response = await fetch("api.php?t=" + new Date().getTime());
-          const data = await response.json();
+        // Tambahkan elemen navigasi setelah kontainer
+        const navHtml = `
+        <div class="pagination-wrapper">
+            <button id="prevPage" class="btn-pagination">Prev</button>
+            <span id="page-info">Hal 1</span>
+            <button id="nextPage" class="btn-pagination">Next</button>
+        </div>
+    `;
+        container.insertAdjacentHTML("afterend", navHtml);
 
-          if (!Array.isArray(data) || data.length === 0) {
-            box.innerHTML =
-              '<p style="text-align:center; color:#999; font-family:Lora, serif; padding:30px; font-style:italic;">Belum ada doa restu yang tersimpan.</p>';
+        const btnPrev = document.getElementById("prevPage");
+        const btnNext = document.getElementById("nextPage");
+        const pageInfo = document.getElementById("page-info");
+
+        async function fetchUcapan() {
+          try {
+            const res = await fetch("api.php?t=" + new Date().getTime());
+            allData = await res.json();
+            renderPage(1);
+          } catch (e) {
+            container.innerHTML =
+              "<p style='text-align:center;'>Gagal memuat data.</p>";
+          }
+        }
+
+        function renderPage(page) {
+          currentPage = page;
+          container.style.display = "block";
+          container.innerHTML = "";
+
+          const start = (page - 1) * itemsPerPage;
+          const end = start + itemsPerPage;
+          const paginatedData = allData.slice(start, end);
+
+          if (paginatedData.length === 0) {
+            container.innerHTML =
+              "<p style='text-align:center; opacity:0.6;'>Belum ada ucapan.</p>";
             return;
           }
 
-          let htmlLengkap = "";
-          data.forEach((item) => {
-            let statusClass = "status-hadir";
-            let statusText = item.konfirmasi || "Hadir";
-            if (statusText === "Masih Ragu") statusClass = "status-ragu";
-            if (statusText === "Tidak Hadir") statusClass = "status-tidak";
-
-            htmlLengkap += `
-                <div class="card-ucapan animate__animated animate__fadeInUp">
+          paginatedData.forEach((item) => {
+            const card = `
+                <div class="card-ucapan">
                     <div class="ucapan-header">
-                        <span class="ucapan-nama">${item.nama}</span>
-                        <span class="ucapan-status-badge ${statusClass}">${statusText}</span>
+                        <span class="ucapan-nama"><i class="far fa-user"></i> ${item.nama}</span>
+                        <span class="ucapan-status-badge">${item.konfirmasi || "Hadir"}</span>
                     </div>
-                    <p class="ucapan-teks">${item.ucapan}</p>
-                    <small class="ucapan-waktu">
-                        <i class="far fa-clock"></i> ${item.created_at}
-                    </small>
+                    <p class="ucapan-teks">"${item.ucapan}"</p>
+                    <small class="ucapan-waktu"><i class="far fa-clock"></i> ${item.created_at}</small>
                 </div>
             `;
+            container.innerHTML += card;
           });
 
-          box.innerHTML = htmlLengkap;
-          box.style.setProperty("display", "block", "important"); // Paksa muncul lewat JS
-        } catch (error) {
-          box.innerHTML =
-            '<p style="color:#721c24; text-align:center; background:#f8d7da; padding:15px; border-radius:10px;">Gagal memuat data ucapan.</p>';
+          // Update Navigasi
+          pageInfo.innerText = `Hal ${currentPage} dari ${Math.ceil(allData.length / itemsPerPage)}`;
+          btnPrev.disabled = currentPage === 1;
+          btnNext.disabled = end >= allData.length;
         }
-      }
-      // Jalankan saat halaman siap
-      document.addEventListener("DOMContentLoaded", function () {
-        muatDaftarUcapan();
 
-        // Integrasi Form Submit
-        const rsvpForm = document.querySelector(".elementor-form");
-        if (rsvpForm) {
-          rsvpForm.addEventListener("submit", async function (e) {
+        btnPrev.addEventListener("click", () => renderPage(currentPage - 1));
+        btnNext.addEventListener("click", () => renderPage(currentPage + 1));
+
+        // Integrasi Form Submit (Refresh otomatis ke hal 1)
+        const form = document.querySelector(".elementor-form");
+        if (form) {
+          form.addEventListener("submit", async function (e) {
             e.preventDefault();
             const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true;
-            btn.innerText = "Mengirim...";
 
-            try {
-              const res = await fetch("api.php", {
-                method: "POST",
-                body: new FormData(this),
-              });
-              const result = await res.json();
+            const res = await fetch("api.php", {
+              method: "POST",
+              body: new FormData(this),
+            });
+            const result = await res.json();
 
-              if (result.status === "success") {
-                this.reset();
-                await muatDaftarUcapan(); // Refresh list
-                alert("Ucapan berhasil terkirim!");
-              }
-            } catch (err) {
-              alert("Gagal mengirim ucapan.");
-            } finally {
-              btn.disabled = false;
-              btn.innerText = "Berikan Ucapan";
+            if (result.status === "success") {
+              this.reset();
+              await fetchUcapan(); // Reload semua data dan ke hal 1
+              alert(result.message);
             }
+            btn.disabled = false;
           });
         }
+
+        fetchUcapan();
       });
     </script>
 
     <style>
-      /* Paksa muncul dan hilangkan display none */
+      /* Paksa kontainer muncul dan buat transparan */
       #rsvp-data-container {
         display: block !important;
-        margin-top: 30px;
+        background: transparent !important;
+        margin-top: 20px;
         padding: 10px;
-        max-height: 600px;
-        overflow-y: auto;
       }
 
-      /* Desain Kartu Ucapan Transparan (Glassmorphism) */
+      /* Kartu Ucapan Transparan */
       .card-ucapan {
-        background: rgba(255, 255, 255, 0.5); /* Transparan putih */
-        backdrop-filter: blur(10px); /* Efek blur kaca */
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.15); /* Transparansi putih tipis */
+        backdrop-filter: blur(8px); /* Efek blur kaca */
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
         padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 20px;
-        box-shadow: 0 8px 32px 0 rgba(102, 81, 62, 0.1);
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        color: #444;
         position: relative;
+        transition: all 0.3s ease;
       }
 
       .ucapan-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 12px;
+        align-items: center;
+        margin-bottom: 10px;
       }
 
-      /* Penambahan Ikon di Nama */
       .ucapan-nama {
         font-family: "Lora", serif;
         font-weight: 700;
         color: #66513e;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      /* Ikon User kecil */
-      .ucapan-nama::before {
-        content: "\f406"; /* Ikon user FontAwesome */
-        font-family: "Font Awesome 5 Free";
-        font-weight: 900;
-        font-size: 14px;
-        opacity: 0.7;
+        font-size: 15px;
       }
 
       .ucapan-status-badge {
-        font-size: 10px;
-        padding: 4px 10px;
-        border-radius: 30px;
-        font-family: "Lora", serif;
+        font-size: 9px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(163, 140, 113, 0.3);
+        color: #66513e;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
-      }
-
-      .status-hadir {
-        background: #d4edda;
-        color: #155724;
-      }
-      .status-ragu {
-        background: #fff3cd;
-        color: #856404;
-      }
-      .status-tidak {
-        background: #f8d7da;
-        color: #721c24;
       }
 
       .ucapan-teks {
         font-family: "Lora", serif;
         font-size: 14px;
-        color: #4a4a4a;
         line-height: 1.6;
-        margin: 0;
-        padding-left: 5px;
-        border-left: 2px solid rgba(163, 140, 113, 0.3); /* Garis aksen tipis */
+        margin: 5px 0;
+        font-style: italic;
+        color: #555;
       }
 
       .ucapan-waktu {
@@ -6677,17 +6667,44 @@
         text-align: right;
         font-size: 9px;
         color: #888;
-        margin-top: 12px;
-        font-style: normal;
+        margin-top: 10px;
       }
 
-      /* Scrollbar tipis biar ga ganggu desain */
-      #rsvp-data-container::-webkit-scrollbar {
-        width: 4px;
+      /* Desain Navigasi Pagination */
+      .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin-top: 25px;
+        padding-bottom: 20px;
       }
-      #rsvp-data-container::-webkit-scrollbar-thumb {
-        background: #a38c71;
-        border-radius: 10px;
+
+      .btn-pagination {
+        background: rgba(102, 81, 62, 0.1);
+        border: 1px solid #66513e;
+        color: #66513e;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      .btn-pagination:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .btn-pagination:hover:not(:disabled) {
+        background: #66513e;
+        color: #fff;
+      }
+
+      #page-info {
+        font-size: 12px;
+        color: #66513e;
+        font-family: "Lora", serif;
       }
     </style>
   </body>
