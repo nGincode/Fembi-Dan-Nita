@@ -6630,7 +6630,6 @@
       src="./wp.envelope.id/wp-content/litespeed/js/40b8a50b3ed6bd3512e831e15e5c24651ba2.js?ver=609c4"
       id="pro-elements-handlers-js"
     ></script>
-
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         let allData = [];
@@ -6639,9 +6638,9 @@
 
         const container = document.getElementById("rsvp-data-container");
 
-        // Tambahkan navigasi pagination di bawah container
+        // Tambahkan navigasi pagination di bawah container (Awalnya disembunyikan)
         const navHtml = `
-        <div class="pagination-wrapper">
+        <div class="pagination-wrapper" style="display: none;">
             <button id="prevPage" class="btn-pagination"><i class="fas fa-chevron-left"></i> Prev</button>
             <span id="page-info">Hal 1</span>
             <button id="nextPage" class="btn-pagination">Next <i class="fas fa-chevron-right"></i></button>
@@ -6652,11 +6651,11 @@
         const btnPrev = document.getElementById("prevPage");
         const btnNext = document.getElementById("nextPage");
         const pageInfo = document.getElementById("page-info");
+        const paginationWrapper = document.querySelector(".pagination-wrapper");
 
-        // Fungsi Waktu Relatif (Contoh: "1 jam lalu", "baru saja")
+        // Fungsi Waktu Relatif
         function timeAgo(dateString) {
           if (!dateString) return "";
-          // Ubah format string ke format tanggal yang valid di semua browser
           const date = new Date(dateString.replace(/-/g, "/"));
           const now = new Date();
           const seconds = Math.floor((now - date) / 1000);
@@ -6681,29 +6680,28 @@
             allData = await res.json();
             renderPage(1);
           } catch (e) {
-            container.innerHTML =
-              "<p style='text-align:center;'>Gagal memuat data.</p>";
+            console.error("Gagal memuat data ucapan.");
           }
         }
 
-        // Render Data ke Layar berdasarkan Halaman
+        // Render Data ke Layar
         function renderPage(page) {
           currentPage = page;
-          container.style.display = "block";
           container.innerHTML = "";
+
+          // JIKA DATA KOSONG: Sembunyikan kotak ucapan dan pagination
+          if (!allData || allData.length === 0) {
+            container.style.setProperty("display", "none", "important");
+            paginationWrapper.style.display = "none";
+            return;
+          }
+
+          // JIKA ADA DATA: Tampilkan kembali kotak ucapan
+          container.style.setProperty("display", "block", "important");
 
           const start = (page - 1) * itemsPerPage;
           const end = start + itemsPerPage;
           const paginatedData = allData.slice(start, end);
-
-          if (paginatedData.length === 0) {
-            // container.innerHTML =
-            //   "<p style='text-align:center; opacity:0.6;'>Belum ada ucapan.</p>";
-            btnPrev.style.display = "none";
-            btnNext.style.display = "none";
-            pageInfo.style.display = "none";
-            return;
-          }
 
           paginatedData.forEach((item) => {
             const waktuRelatif = timeAgo(item.created_at);
@@ -6720,29 +6718,31 @@
             container.innerHTML += card;
           });
 
-          // Update Navigasi Pagination
+          // Logika Pagination
           const totalPages = Math.ceil(allData.length / itemsPerPage) || 1;
-          pageInfo.innerText = `Hal ${currentPage} dari ${totalPages}`;
 
-          btnPrev.style.display = "inline-block";
-          btnNext.style.display = "inline-block";
-          pageInfo.style.display = "inline-block";
-
-          btnPrev.disabled = currentPage === 1;
-          btnNext.disabled = currentPage >= totalPages;
+          // Jika data sedikit (hanya butuh 1 halaman), sembunyikan tombol next/prev
+          if (totalPages <= 1) {
+            paginationWrapper.style.display = "none";
+          } else {
+            paginationWrapper.style.display = "flex";
+            pageInfo.innerText = `Hal ${currentPage} dari ${totalPages}`;
+            btnPrev.disabled = currentPage === 1;
+            btnNext.disabled = currentPage >= totalPages;
+          }
         }
 
         // Event Klik Pagination
         btnPrev.addEventListener("click", () => {
           renderPage(currentPage - 1);
-          container.scrollTop = 0; // Scroll ke atas container
+          container.scrollTop = 0;
         });
         btnNext.addEventListener("click", () => {
           renderPage(currentPage + 1);
           container.scrollTop = 0;
         });
 
-        // Form Submit (Elementor Form)
+        // Form Submit (Kirim Data Baru)
         const form = document.querySelector(".elementor-form");
         if (form) {
           form.addEventListener("submit", async function (e) {
@@ -6761,7 +6761,7 @@
 
               if (result.status === "success") {
                 this.reset();
-                await fetchUcapan(); // Ambil data terbaru & kembali ke hal 1
+                await fetchUcapan(); // Data baru ter-load, kotak otomatis muncul
                 alert("Terima kasih atas doa restunya!");
               }
             } catch (err) {
@@ -6773,7 +6773,7 @@
           });
         }
 
-        // Jalankan saat pertama dibuka
+        // Jalankan saat halaman dibuka
         fetchUcapan();
       });
     </script>
