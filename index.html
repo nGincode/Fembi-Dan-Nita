@@ -4700,7 +4700,7 @@
                         required="required"
                         aria-required="true"
                       >
-                        <option value="0">Konfirmasi Kehadiran</option>
+                        <option>Konfirmasi Kehadiran</option>
                         <option value="Hadir">Hadir</option>
                         <option value="Tidak Hadir">Tidak Hadir</option>
                         <option value="Masih Ragu">Masih Ragu</option>
@@ -4759,9 +4759,7 @@
             data-widget_type="rsvp.default"
           >
             <div class="elementor-widget-container">
-              <div id="rsvp-data-container" class="rsvp-data-container">
-                Comment data goes here
-              </div>
+              <div id="rsvp-data-container" class="rsvp-data-container"></div>
             </div>
           </div>
         </div>
@@ -5034,7 +5032,7 @@
                 </script>
               </div>
             </div>
-            <!-- <div
+            <div
               class="elementor-element elementor-element-2b04e8e e-grid e-con-full e-con e-child"
               data-id="2b04e8e"
               data-element_type="container"
@@ -5047,10 +5045,7 @@
               >
                 <div class="elementor-widget-container">
                   <audio id="mp3-player" loop style="display: none">
-                    <source
-                      src="https://wp.envelope.id/wp-content/uploads/2025/10/NIDJI-Rahasia-Hati.mp3"
-                      type="audio/mpeg"
-                    />
+                    <source src="./lagu.mpeg" type="audio/mpeg" />
                   </audio>
 
                   <div
@@ -5107,11 +5102,8 @@
                     var mp3Player;
                     var ytMusicPlayer;
                     var ytVideoPlayer;
-                    var mp3Url =
-                      "https://wp.envelope.id/wp-content/uploads/2025/10/NIDJI-Rahasia-Hati.mp3";
+                    var mp3Url = "./lagu.mpeg";
                     var musicYoutubeUrl = "";
-                    var videoYoutubeUrl =
-                      "https://youtu.be/fRjyEb8XVHg?si=G6XgwM0vgBJhvpFU";
                     var isMusicReady = false;
                     var isMusicPlaying = false;
                     var usingMp3 = false;
@@ -5152,26 +5144,6 @@
                             onStateChange: onMusicPlayerStateChange,
                           },
                         });
-                      }
-
-                      if (videoVideoID != "") {
-                        $("#youtube-video-container").show();
-
-                        ytVideoPlayer = new YT.Player("youtube-video-player", {
-                          height: "360",
-                          width: "640",
-                          videoId: extractVideoID(videoYoutubeUrl),
-                          playerVars: {
-                            autoplay: 0,
-                            playsinline: 1,
-                          },
-                          events: {},
-                        });
-
-                        setInterval(function () {
-                          var state = { data: ytVideoPlayer.getPlayerState() };
-                          onVideoPlayerStateChange(state);
-                        }, 1000);
                       }
                     }
 
@@ -5415,27 +5387,10 @@
                         }
                       }
                     });
-
-                    $(document).ready(function () {
-                      // Load YouTube API if using YouTube for music or video
-                      if (!usingMp3 || videoYoutubeUrl) {
-                        var existingScript = $(
-                          'script[src="https://www.youtube.com/iframe_api"]',
-                        );
-                        if (existingScript.length > 0) {
-                          existingScript.remove();
-                        }
-
-                        var s = document.createElement("script");
-                        s.type = "text/javascript";
-                        s.src = "https://www.youtube.com/iframe_api";
-                        $("head").append(s);
-                      }
-                    });
                   </script>
                 </div>
               </div>
-            </div> -->
+            </div>
           </div>
         </div>
         <!-- <div
