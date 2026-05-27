@@ -115,19 +115,31 @@
         urlOutput.value = finalUrl;
 
         // Template Pesan WhatsApp
-        const messageTemplate = `Bismillahirahmanirrahim.
-Tanpa mengurangi rasa hormat, perkenankan kami mengundang Bapak/Ibu/Saudara/i:
-
+        const messageTemplate = `
+Dear:
+        
 *${name || "[Nama Tamu]"}*
 
-Untuk hadir dan memberikan doa restu pada acara pernikahan kami. Detail acara, lokasi, dan RSVP dapat dilihat melalui tautan undangan berikut:
+Assalamu'alaikum Warahmatullahi Wabarakatuh
+
+Bismillahirrahmanirrahim
+
+Tanpa mengurangi rasa hormat, perkenankan kami mengundang Bapak/Ibu/Saudara/i teman serta sahabat untuk menghadiri acara kami.
+
+Berikut link undangan kami, untuk info lengkap dari acara bisa kunjungi :
 
 ${finalUrl}
 
-Merupakan suatu kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.
+Merupakan kebahagiaan besar bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu bagi kedua mempelai.
 
-Terima kasih,
-Nita & Fembi`;
+Terima kasih atas perhatian dan kehadirannya.
+
+Wassalamualaikum Warahmatullahi Wabarakatuh
+
+Hormat kami,
+Nita & Fembi
+
+(E-Invitation ini sebagai pengganti undangan resmi dari kami, semoga tidak mengurangi makna serta isinya)`;
 
         waOutput.value = messageTemplate;
       }
